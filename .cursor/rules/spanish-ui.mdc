@@ -1,0 +1,53 @@
+---
+alwaysApply: true
+---
+
+# Spanish UI Standards
+
+## Language Rules
+
+**MANDATORY**: All UI text in Spanish, all code in English.
+
+## Centralized Error Messages
+
+**ALWAYS** use centralized `ERROR_MESSAGES` from [lib/utils/errorMessages.ts](mdc:lib/utils/errorMessages.ts):
+
+```typescript
+// ✅ CORRECT: Centralized Spanish messages
+import { ERROR_MESSAGES } from "@/lib/utils/errorMessages";
+
+<TextField
+  label="Nombre Completo"
+  error={!!validationErrors.fullName}
+  helperText={validationErrors.fullName || ERROR_MESSAGES.FULL_NAME_REQUIRED}
+/>
+
+// ❌ WRONG: Hardcoded Spanish strings
+{ error: "Un paciente con esta información ya existe." }
+```
+
+## UI Text Examples
+
+- **Labels**: "Nombre Completo", "Fecha de Nacimiento", "Número de Teléfono"
+- **Buttons**: "Agregar Paciente", "Guardar Cambios", "Cancelar"
+- **Messages**: "Paciente creado exitosamente", "Error al cargar datos"
+- **Placeholders**: "Ingresa el nombre del paciente", "Selecciona una fecha"
+
+## Code Standards
+
+- **Variable Names**: English (e.g., `fullName`, `dateOfBirth`, `phoneNumber`)
+- **Function Names**: English (e.g., `handleSubmit`, `validateForm`, `fetchPatients`)
+- **Comments**: English
+- **Type Names**: English (e.g., `PatientFormData`, `ApiResponse`)
+
+## Error Message Structure
+
+All error messages must be added to [lib/utils/errorMessages.ts](mdc:lib/utils/errorMessages.ts) with descriptive English keys:
+
+```typescript
+export const ERROR_MESSAGES = {
+  PATIENT_NOT_FOUND: "Paciente no encontrado",
+  VALIDATION_FAILED: "Validación fallida",
+  UNAUTHORIZED: "No autorizado"
+};
+```

@@ -1,0 +1,42 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript Standards
+
+## Direct Prisma Type Usage
+
+**MANDATORY**: Use Prisma types directly from `@prisma/client` - NO custom type abstractions.
+
+```typescript
+// ✅ CORRECT: Direct Prisma type usage
+import type { DoctorPatient } from "@prisma/client";
+interface Props { patients: DoctorPatient[]; }
+
+// ❌ WRONG: Custom type abstraction
+export type PatientTableData = DoctorPatient;
+```
+
+## Import Standards
+
+```typescript
+// ✅ CORRECT: Type-only imports
+import type { DoctorPatient, Appointment } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+
+// ✅ CORRECT: Runtime imports
+import { prisma } from "@/lib/prisma";
+import { ERROR_MESSAGES } from "@/lib/utils/errorMessages";
+```
+
+## File Size Limits
+
+- **Maximum**: 350 lines per component file
+- **Action Required**: Extract utilities and split components when approaching limit
+- **Exception**: Only with explicit justification
+
+## Type Safety Rules
+
+- **Strict Mode**: No `any` types allowed
+- **Proper Interfaces**: Clear, descriptive interfaces for all props
+- **Type Guards**: Use proper type checking for dynamic content

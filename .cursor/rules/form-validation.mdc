@@ -1,0 +1,98 @@
+---
+description: Standards for form validation and error handling in client components
+---
+
+# Form Validation Standards
+
+## Client-Side Validation Pattern
+
+**MANDATORY**: Validate forms on client-side before API submission.
+
+```typescript
+// ✅ REQUIRED: Validation before submission
+const validateForm = () => {
+  const errors: Record<string, string> = {};
+  
+  if (!form.fullName.trim()) {
+    errors.fullName = ERROR_MESSAGES.FULL_NAME_REQUIRED;
+  }
+  
+  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    errors.email = ERROR_MESSAGES.INVALID_EMAIL;
+  }
+  
+  setValidationErrors(errors);
+  return Object.keys(errors).length === 0;
+};
+
+const handleSubmit = (formData) => {
+  if (!validateForm()) return; // Validate FIRST
+  
+  startTransition(async () => {
+    const response = await fetch('/api/endpoint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+    
+    if (response.ok) {
+      router.refresh(); // Revalidate server data
+    } else {
+      const result = await response.json();
+      setError(result.error || ERROR_MESSAGES.UNEXPECTED_ERROR);
+    }
+  });
+};
+```
+
+## Form Field Standards
+
+```typescript
+// ✅ CORRECT: Form field with validation
+<TextField
+  label="Nombre Completo"
+  placeholder="Ingresa el nombre del paciente"
+  value={form.fullName}
+  onChange={(e) => setForm(prev => ({ ...prev, fullName: e.target.value }))}
+  error={!!validationErrors.fullName}
+  helperText={validationErrors.fullName}
+  required
+/>
+```
+
+## API Route Validation
+
+Use Zod for server-side validation:
+
+```typescript
+// ✅ REQUIRED: Zod schema with centralized messages
+const Schema = z.object({
+  fullName: z.string().min(1, ERROR_MESSAGES.FULL_NAME_REQUIRED),
+  email: z.string().email(ERROR_MESSAGES.INVALID_EMAIL).optional().or(z.literal(""))
+});
+
+// ✅ REQUIRED: Handle validation errors
+try {
+  const validatedData = Schema.parse(body);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.VALIDATION_FAILED, details: error.errors },
+      { status: 400 }
+    );
+  }
+}
+```
+
+## Required Form Fields
+
+- **Name**: Always required
+- **Date of Birth**: Always required  
+- **Phone/Email**: Optional with "Opcional" placeholder
+- **Other Fields**: Optional unless specified
+
+## Error Handling
+
+- **Client Validation**: Immediate feedback with Spanish messages
+- **API Errors**: Display centralized error messages
+- **Loading States**: Use `useTransition` for pending states

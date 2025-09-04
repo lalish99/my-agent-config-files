@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# API Architecture Standards
+
+## Critical Rule: API Routes Over Server Actions
+
+**MANDATORY**: Use API routes (POST, PATCH, DELETE) for ALL mutations - NEVER server actions.
+
+**Reasoning**: Mobile app compatibility is a key future requirement. Server actions are incompatible with mobile development.
+
+## Server Component Data Fetching
+
+Server components MUST use direct Prisma calls for data fetching:
+
+```typescript
+// ✅ CORRECT: Direct Prisma in server component
+const patients = await prisma.doctorPatient.findMany({
+  where: { doctorId: doctorProfile.id }
+});
+
+// ❌ WRONG: Fetch in server component
+const data = await fetch('/api/patients');
+```
+
+## API Route Pattern
+
+```typescript
+// ✅ REQUIRED: API route structure
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: ERROR_MESSAGES.UNAUTHORIZED }, { status: 401 });
+  }
+  
+  const validatedData = Schema.parse(await request.json());
+  const result = await prisma.model.create({
+    data: { ...validatedData, userId }
+  });
+  
+  return NextResponse.json({ result }, { status: 201 });
+}
+```
+
+## Client Component Mutations
+
+Client components use API routes for mutations:
+
+```typescript
+// ✅ CORRECT: Client component calling API route
+const handleSubmit = async (formData) => {
+  const response = await fetch('/api/endpoint', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData)
+  });
+  
+  if (response.ok) {
+    router.refresh(); // Revalidate server component data
+  }
+};
+```

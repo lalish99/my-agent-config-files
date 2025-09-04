@@ -1,0 +1,73 @@
+---
+globs: app/**/*.tsx,app/**/*.ts
+---
+
+# Component Organization Standards
+
+## File Structure Pattern
+
+```
+app/[role]/[feature]/
+├── components/              # Feature-specific components
+│   ├── FeatureSC.tsx       # Server component (data fetching)
+│   ├── FeatureTable.tsx    # Client component (UI)
+│   ├── FeatureModal.tsx    # Client component (interactions)
+│   └── FeatureRow.tsx      # Client component (individual items)
+├── [id]/                   # Dynamic routes
+│   ├── page.tsx            # Route page
+│   ├── loading.tsx         # Loading state (REQUIRED)
+│   └── error.tsx           # Error state (REQUIRED)
+├── page.tsx                # Main feature page
+├── loading.tsx             # Feature loading state (REQUIRED)
+└── error.tsx              # Feature error state (REQUIRED)
+```
+
+## Server-Client Separation
+
+**Server Components (SC)**: Data fetching with Prisma, reference in [.github/instructions/server-client-architecture.instructions.md](mdc:.github/instructions/server-client-architecture.instructions.md)
+
+```typescript
+// ✅ CORRECT: Server component pattern
+export async function PatientTableSC() {
+  const patients = await prisma.doctorPatient.findMany({
+    where: { doctorId: doctorProfile.id }
+  });
+  return <PatientTable patients={patients} />;
+}
+```
+
+**Client Components (CC)**: UI interactions and state management
+
+```typescript
+// ✅ CORRECT: Client component pattern
+"use client";
+export function PatientTable({ patients }: Props) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // UI logic and interactions
+}
+```
+
+## Required Files
+
+- **loading.tsx**: MUI Skeleton components for every route
+- **error.tsx**: Graceful error handling with Spanish messages
+- **page.tsx**: Main route component with Suspense wrapper
+
+## Suspense Pattern
+
+```typescript
+// ✅ REQUIRED: Page structure with Suspense
+export default function FeaturePage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <FeatureSC />
+    </Suspense>
+  );
+}
+```
+
+## Component Naming
+
+- **Server Components**: End with `SC` (e.g., `PatientTableSC.tsx`)
+- **Client Components**: Descriptive names (e.g., `PatientTable.tsx`, `PatientModal.tsx`)
+- **Files**: PascalCase matching component name

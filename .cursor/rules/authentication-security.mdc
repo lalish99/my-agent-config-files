@@ -1,0 +1,77 @@
+---
+description: Rules for implementing proper authentication and data scoping with Clerk
+---
+
+# Authentication & Security Standards
+
+## Clerk Authentication Pattern
+
+**MANDATORY**: Always scope data to authenticated user/role.
+
+```typescript
+// ✅ REQUIRED: Server component authentication
+export async function DataSC() {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+  
+  const doctorProfile = await prisma.doctorProfile.findUnique({
+    where: { userId },
+    select: { id: true }
+  });
+  
+  if (!doctorProfile) redirect("/register/doctor");
+  
+  // Always scope data to authenticated user
+  const data = await prisma.model.findMany({
+    where: { doctorId: doctorProfile.id }
+  });
+}
+```
+
+## API Route Security
+
+```typescript
+// ✅ REQUIRED: API route authentication pattern
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.UNAUTHORIZED }, 
+      { status: 401 }
+    );
+  }
+  
+  // Always verify user profile exists
+  const doctorProfile = await prisma.doctorProfile.findUnique({
+    where: { userId },
+    select: { id: true }
+  });
+  
+  if (!doctorProfile) {
+    return NextResponse.json(
+      { error: ERROR_MESSAGES.DOCTOR_PROFILE_NOT_FOUND },
+      { status: 404 }
+    );
+  }
+  
+  // Scope all operations to authenticated user
+  const result = await prisma.model.create({
+    data: { ...validatedData, doctorId: doctorProfile.id }
+  });
+}
+```
+
+## Business Rules
+
+- **Doctors**: Can ONLY see their own `DoctorPatient` records
+- **Data Scoping**: ALL queries must filter by doctor/user ID
+- **No Cross-Access**: Doctors CANNOT access registered `Patient` profiles
+- **Profile Verification**: Always verify doctor profile exists before data operations
+
+## Security Checklist
+
+- [ ] User authentication check with `auth()`
+- [ ] Profile existence verification
+- [ ] Data scoped to authenticated user
+- [ ] Proper error messages for unauthorized access
+- [ ] Redirect to appropriate registration/login pages
